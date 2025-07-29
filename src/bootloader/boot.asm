@@ -105,18 +105,18 @@ exit:
 %include "./src/bootloader/bootprint.asm"
 
 initmsg:
-    db "Bootloader loaded without issues. Changing to 32-bit protected mode...", 0
+    db "Bootloader started without issues. Loading kernel...", 13, 10, 0
 
 disk_crash_cf_msg:
-    db "Fatal: Something went wrong when reading: Carry flag is set.", 0
+    db "Fatal: Something went wrong when reading disk: Carry flag is set.", 13, 10, 0
 
 disk_crash_nsectors_msg:
-db "Fatal: Something went wrong when reading: Try highening the number of loaded sectors.", 0
+    db "Fatal: Something went wrong when reading disk: Try highening the number of loaded sectors.", 13, 10, 0
 
 init32msg:
-    db "Now in 32-bit mode. Loading kernel...", 0
+    db "Now in 32-bit mode. Loading kernel...\n\r", 0
 
 times 510-($-$$) db 0 ; Pad up to 510 bytes         
 dw 0xaa55 ; Last two bytes are the bootloader sign
 
-%include "./src/bootloader/gdt.asm"
+%include "./src/bootloader/gdt.asm" ; Next sector is GDT
