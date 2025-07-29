@@ -20,7 +20,7 @@ It consists of two parts:
   
 ## Project layout
 
-.
+.  
 ├── src/  
 │   ├── bootloader/  
 │   │   ├── boot.asm  
@@ -50,8 +50,8 @@ It consists of two parts:
   
 ## Build commands
 
-To build: `make build OS_ROOT=/path/to/project/root/` or `make OS_ROOT=/path/to/project/root`
-To clean: `make clean OS_ROOT=/path/to/project/root/` or `rm -rf /path/to/project/root/build
+To build: `make build OS_ROOT=/path/to/project/root/` or `make OS_ROOT=/path/to/project/root`  
+To clean: `make clean OS_ROOT=/path/to/project/root/` or `rm -rf /path/to/project/root/build`
 
   
 ## Notice
