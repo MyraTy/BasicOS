@@ -9,6 +9,7 @@ It consists of two parts:
 2. The kernel, which basically does nothing except being loaded onto address 0x9000 from sectors 3 up right now.
 
 
+
 ## Requirements
 
 - Binutils and GCC (Cross-compilers)
@@ -16,22 +17,24 @@ It consists of two parts:
 - Some sort of emulator to run the OS
 
 
+
 ## Project layout
 
 .
-├── src/
-│   ├── bootloader/
-│   │   ├── boot.asm
-│   │   ├── bootprint.asm (contains utilities to print text to screen for the bootloader)
-│   │   └── gdt.asm
-│   └── kernel/
-│       ├── kernel_entry.asm
-│       └── kernel.cpp
-├── Makefile
-├── LICENSE
-└── README.md
+├── src/ 
+│   ├── bootloader/ 
+│   │   ├── boot.asm 
+│   │   ├── bootprint.asm (contains utilities to print text to screen for the bootloader) 
+│   │   └── gdt.asm 
+│   └── kernel/ 
+│       ├── kernel_entry.asm 
+│       └── kernel.cpp 
+├── Makefile 
+├── LICENSE 
+└── README.md 
 
 >NOTE: When building the project, there will be generated two directories in the root folder: build (used at build time) and dist (contains the built .bin)
+
 
 
 ## RAM layout
@@ -45,6 +48,7 @@ It consists of two parts:
 0xB0000 - 0xD0000: Data segments (for ASM extensions, each of 0x4000 bytes, or 16Kb, in size)
 
 
+
 ## Build commands
 
 To build: `make build OS_ROOT=/path/to/project/root/` or `make OS_ROOT=/path/to/project/root`
@@ -52,4 +56,6 @@ To clean: `make clean OS_ROOT=/path/to/project/root/` or `rm -rf /path/to/projec
 
 
 
-Note that some code of this project is partially AI-generated and then adapted and rewritten.
+#### Notice
+
+Some code of this project is partially AI-generated and then adapted and rewritten.
