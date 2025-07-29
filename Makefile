@@ -1,7 +1,4 @@
 .PHONY: build clean
-GCC=/usr/local/i386elfgcc/bin/i386-elf-gcc
-LD=/usr/local/i386elfgcc/bin/i386-elf-ld
-OS_ROOT=$OS_ROOT
 
 build:
 	echo "Preparing everythng..."
