@@ -100,7 +100,7 @@ start_protected_mode:
     jmp KERNEL_LOCATION         
 
 exit:
-    jmp exit ; Emergency hang for fatal errors
+    jmp exit ; Emergency hang
 
 %include "./src/bootloader/bootprint.asm"
 
