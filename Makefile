@@ -6,7 +6,7 @@ build:
 	rm -rf $(OS_ROOT)/dist
 	mkdir -p $(OS_ROOT)/build
 	mkdir -p $(OS_ROOT)/dist
-
+	
 	echo "Building bootloader..."
 	nasm $(OS_ROOT)/src/bootloader/boot.asm -f bin -o $(OS_ROOT)/build/boot.bin
 
