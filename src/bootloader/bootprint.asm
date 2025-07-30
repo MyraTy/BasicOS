@@ -1,37 +1,39 @@
 [org 0x7c00]
 [bits 16]
 print_16:
-        pusha ; save all registers
+        pusha ; Save all registers
     .next16_char:
-        mov al, [bx] ; load byte
-        cmp al, 0 ; null terminator?
+        mov al, [bx] ; Load byte
+        cmp al, 0 ; Null terminator?
         je .done16
         mov ah, 0Eh ; BIOS teletype function
         int 0x10 ; BIOS interrupt
-        inc bx ; next char
+        inc bx ; Next char
         jmp .next16_char
     .done16:
-        popa ; restore all registers
+        popa ; Restore all registers
         ret
 
 [bits 32]
 print_32:
-    pusha ; save all registers
+    pusha ; Save all registers
 
     mov edi, 0xB8000 ; VGA text memory segment (physical address)
-    mov ecx, 0 ; column counter
+    mov eax, 25 ; Number of lines
+    mul edx ; Starting position in text mode memory
+    add edi, edx
+    add edi, ecx ; Add offset for the current line
 
     .next32_char:
-        mov al, [ebx] ; load char
-        cmp al, 0 ; null terminator?
+        mov al, [ebx] ; Load char
+        cmp al, 0 ; Null terminator?
         je .done32
-        mov bl, 0x07 ; attribute byte (color)
+        mov ah, 0x07 ; Attribute byte (color)
 
-        mov [edi], al ; write character
-        mov [edi+1], bl ; write attribute
+        mov [edi], ax ; Write character and attribute to video memory
 
-        add edi, 2 ; move to next character cell
-        inc ebx ; next character in string
+        add edi, 2 ; Move to next character cell
+        inc ebx ; Next character in string
         jmp .next32_char
 
     .done32:

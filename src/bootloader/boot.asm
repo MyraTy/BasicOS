@@ -1,8 +1,8 @@
 [org 0x7c00]
 [bits 16]
 
-GDT_LOCATION equ 0x7E00    
-KERNEL_LOCATION equ 0x9000                       
+GDT_LOCATION equ 0x7E00  
+KERNEL_LOCATION equ 0x9000      
 STACK_START_LOCATION equ 0x9000
 
 CODE_SEG_BASE_ADDR equ 0x90000
@@ -22,13 +22,16 @@ mov bx, initmsg
 call print_16
 
 loadgdt:
+mov ax, GDT_LOCATION ; Load the GDT from the disk
+shr ax, 4 ; GDT is at 0x7E00/16 = 0x7E0
+mov es, ax ; Set ES to the GDT segment
+mov bx, 0 ; with an offset 0 within that segment.
 mov ah, 2 ; Mandatory
 mov al, 20 ; Read 1 sector
 mov dl, 0x80 ; from the C:/ disk, starting from
 mov ch, 0x00 ; cylinder 0, 
 mov dh, 0x00 ; head 0
-mov cl, 0x02 ; and sector 2
-mov bx, GDT_LOCATION ; and dump the data into address 0xE00.
+mov cl, 0x02 ; and sector 2.
 int 0x13
 
 jnc loadk ; Carry flag set to 1 after disk read means there's an error. If no errors, continue
@@ -38,27 +41,26 @@ call print_16
 jmp exit ; If an error occurs, hang
 
 loadk:
+mov ax, KERNEL_LOCATION ; Load the kernel from the disk
+shr ax, 4 ; Kernel is at 0x9000/16 = 0x900
+mov es, ax ; Set ES to the GDT segment
+mov bx, 0 ; with an offset 0 within that segment.
 mov ah, 2 ; Mandatory
 mov al, 20 ; Read 20 sectors
 mov dl, 0x80 ; from the C:/ disk, starting from
 mov ch, 0x00 ; cylinder 0, 
 mov dh, 0x00 ; head 0
 mov cl, 0x03 ; and sector 3
-mov bx, KERNEL_LOCATION ; and dump the data into address 0x1000.
 int 0x13
 
-
-jc disk_crash_cf_kernel ; Carry flag set to 1 after disk read means there's an error
-
 cmp dh, al
-jne disk_crash_nsectors_kernel ; There's also an error if the number of sectors to read changes after disk read
+jne disk_crash_nsectors_kernel ; An error has occured if the number of sectors to read changes after disk read
 
-jmp init_protected_mode ; If no errors occur while reading disk, continue
+jnc init_protected_mode ; Carry flag set to 1 after disk read means there's an error
 
-disk_crash_cf_kernel:
-    mov bx, disk_crash_cf_msg_kernel
-    call print_16
-    jmp exit
+mov bx, disk_crash_cf_msg_kernel
+call print_16
+jmp exit
 
 disk_crash_nsectors_kernel:
     mov bx, disk_crash_nsectors_msg_kernel
@@ -79,9 +81,9 @@ jmp CODE_SEG32:start_protected_mode
 [bits 32]
 start_protected_mode:
 
-    mov esi, init32msg
-    mov ebx, 0
-    mov ecx, 2
+    mov ebx, init32msg
+    mov ecx, 0
+    mov edx, 2
     call print_32
 
 
@@ -106,16 +108,16 @@ initmsg:
     db "Bootloader started without issues. Retrieving kernel and GDT...", 13, 10, 0
 
 disk_crash_cf_msg_gdt:
-    db "Fatal: Carry flag set when retrieving the GDT from disk.", 13, 10, 0
+    db "Fatal: Carry flag set when loading the GDT.", 13, 10, 0
 
 disk_crash_cf_msg_kernel:
-    db "Fatal: Carry flag set when retrieving the kernel from disk.", 13, 10, 0
+    db "Fatal: Carry flag set when loading kernel.", 13, 10, 0
 
 disk_crash_nsectors_msg_kernel:
-    db "Fatal: Number of sectors to read too low when retrieving the kernel from disk.", 13, 10, 0
+    db "Fatal: Number of sectors read too low for the kernel to fit in.", 13, 10, 0
 
 init32msg:
-    db "Now in 32-bit mode. Loading kernel...", 13, 10, 0
+    db "Now in 32-bit mode. Starting kernel...", 13, 10, 0
 
 times 510-($-$$) db 0 ; Pad up to 510 bytes         
 dw 0xaa55 ; Last two bytes are the bootloader sign
