@@ -2,7 +2,7 @@
 [bits 16]
 
 GDT_LOCATION equ 0x7E00  
-KERNEL_LOCATION equ 0x9000      
+KERNEL_LOCATION equ 0x9000
 STACK_START_LOCATION equ 0x9000
 KERNEL_NSECTORS equ 20 ; Number of sectors to read for the kernel
 

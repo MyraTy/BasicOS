@@ -1,4 +1,4 @@
-; GDT is in 2nd sector
+; GDT is in head 0 cyl 0 sector 2s
 GDT32_start:
     GDT32_null:
         dq 0x0000000000000000

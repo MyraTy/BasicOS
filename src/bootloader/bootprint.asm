@@ -9,7 +9,7 @@ print_16:
         mov ah, 0Eh ; BIOS teletype function
         int 0x10 ; BIOS interrupt
         inc bx ; Next char
-        jmp .next16_char
+        jmp .next16_char ; Continue loop
     .done16:
         popa ; Restore all registers
         ret
@@ -38,7 +38,7 @@ print_32:
 
         add edi, 2 ; Move to next character cell
         inc ebx ; Next character in string
-        jmp .next32_char
+        jmp .next32_char ; Continue loop
 
     .done32:
         popa ; Restore all registers
