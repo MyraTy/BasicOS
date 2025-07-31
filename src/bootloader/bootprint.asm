@@ -19,10 +19,14 @@ print_32:
     pusha ; Save all registers
 
     mov edi, 0xB8000 ; VGA text memory segment (physical address)
-    mov eax, 25 ; Number of lines
+
+    mov eax, 160 ; Number of bytes per line in text mode (80 columns * 2 bytes per character cell)
     mul edx ; Starting position in text mode memory
-    add edi, edx
-    add edi, ecx ; Add offset for the current line
+    add edi, eax ; Add column offset
+
+    mov eax, 2 ; Each character cell is 2 bytes (char + attribute)
+    mul ecx ; As each character cell is 2 bytes (char + attribute), the starting column will also be duplicated
+    add edi, eax ; Add line offset
 
     .next32_char:
         mov al, [ebx] ; Load char
@@ -37,5 +41,5 @@ print_32:
         jmp .next32_char
 
     .done32:
-        popa ; restore all registers
+        popa ; Restore all registers
         ret

@@ -18,7 +18,7 @@ GDT32_start:
         db 0b10010001
         db 0b11000000
         db 0x00
-    
+
     GDT32_user_code:
         dw 0x0001
         dw 0x0000
