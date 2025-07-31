@@ -41,6 +41,4 @@ GDT32_descriptor:
     dw GDT32_end - GDT32_start - 1
     dw GDT32_start
 
-BOOT_DISK: db 0
-
 times 512-($-GDT32_start) db 0 ; Pad up to 512 bytess
