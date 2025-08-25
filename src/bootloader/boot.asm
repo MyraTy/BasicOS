@@ -3,8 +3,8 @@
 
 GDT_LOCATION equ 0x7E00  
 KERNEL_LOCATION equ 0x9000
-STACK_START_LOCATION equ 0x9000
-KERNEL_NSECTORS equ 20 ; Number of sectors to read for the kernel
+STACK_START_LOCATION equ 0x8000
+KERNEL_NSECTORS equ 1
 
 CODE_SEG_BASE_ADDR equ 0x90000
 DATA_SEG_BASE_ADDR equ 0xB0000
@@ -12,7 +12,8 @@ DATA_SEG_BASE_ADDR equ 0xB0000
 CODE_SEG_MAXSIZE equ 0x4000
 DATA_SEG_MAXSIZE equ 0x4000   
 
-init:                       
+init:    
+    mov [diskno], dl ; Store the disk number
     xor ax, ax ; Zero ax                  
     mov es, ax
     mov ds, ax
@@ -28,12 +29,13 @@ loadgdt:
     mov es, ax ; Set ES to the GDT segment
     mov bx, 0 ; with an offset 0 within that segment.
     mov ah, 2 ; Mandatory
-    mov al, 1 ; Read 1 sector
-    mov dl, 0x80 ; from the C:/ disk, starting from
+    mov al, 1 ; Number of sectors to read
+    mov dl, [diskno] ; Read from the current drive, starting from
     mov ch, 0x00 ; cylinder 0, 
     mov dh, 0x00 ; head 0
     mov cl, 0x02 ; and sector 2.
     int 0x13
+
 mov cx, gdt_str
 jc diskerr ; Carry flag set to 1 after disk read means there's an error.
 
@@ -43,8 +45,8 @@ loadk:
     mov es, ax ; Set ES to the GDT segment
     mov bx, 0 ; with an offset 0 within that segment.
     mov ah, 2 ; Mandatory
-    mov al, KERNEL_NSECTORS ; Read 20 sectors
-    mov dl, 0x80 ; from the C:/ disk, starting from
+    mov al, KERNEL_NSECTORS ; Number of sectors to read
+    mov dl, [diskno] ; Read from the current drive, starting from
     mov ch, 0x00 ; cylinder 0, 
     mov dh, 0x00 ; head 0
     mov cl, 0x03 ; and sector 3
@@ -54,8 +56,6 @@ mov cx, kernel_str
 jc diskerr ; Carry flag set to 1 after disk read means there's an error.
 
 init_protected_mode:
-    CODE_SEG32 equ GDT32_kernel_code - GDT32_start
-    DATA_SEG32 equ GDT32_kernel_data - GDT32_start
 
     mov bx, before32msg
     call print_16 ; Print the message before switching to 32-bit mode
@@ -63,15 +63,13 @@ init_protected_mode:
     cli ; Disable BIOS interrupts
     lgdt [GDT32_descriptor] ; Load GDT
     mov eax, cr0 ; Zero out the CR0 register
-    or al, 1
+    or eax, 1
     mov cr0, eax ; Set the PE (Protection Enable) bit in CR0. Now officially in protected mode.
-    call print_32
-    jmp CODE_SEG32:start_protected_mode ; Far jump
+    jmp 0x08:start_protected_mode ; Far jump
 
 [bits 32]
 start_protected_mode:
-
-    mov ax, DATA_SEG32
+    mov ax, 0x10
 	mov ds, ax
 	mov ss, ax
 	mov es, ax
@@ -85,8 +83,12 @@ start_protected_mode:
     mov ecx, 0 ; Column number
     mov edx, 2 ; Line number
     call print_32
+    jmp KERNEL_LOCATION
 
-    jmp KERNEL_LOCATION         
+[bits 16]
+exit:
+    hlt
+    jmp exit ; Hang when needed
 
 diskerr:
     mov bx, disk_crash_first
@@ -106,7 +108,11 @@ diskerr:
     mov bx, disk_crash_third
     call print_16
 
-    mov [errcode], ah ; Store the error code in errcode]
+    add ah, ' ' ; Make the error character a printable one (later substract by 0x20)
+    mov al, ah
+    xor ah, ah ; As ax is [ah:al], this is a way to null-terminate the string (ah contains the error code)
+
+    mov [errcode], ax ; Store the error code in errcode
     mov bx, errcode
     call print_16
 
@@ -115,10 +121,10 @@ diskerr:
 
     jmp exit
 
-exit:
-    jmp exit ; Emergency hang
-
 %include "./src/bootloader/bootprint.asm"
+
+diskno:
+    db 0
 
 initmsg:
     db "Bootloader started!", 13, 10, 0
@@ -127,7 +133,7 @@ disk_crash_first:
     db "Fatal (tried to load the ", 0
 
 disk_crash_second:
-    db " ): Could only read ", 0
+    db "): Could only read ", 0
 
 disk_crash_third:
     db " disk sectors. Error char: ", 0
@@ -145,7 +151,7 @@ nsectors:
     db 0
 
 errcode:
-    db 0
+    dw 0
 
 before32msg:
     db "Loads sucessful. Starting 32-bit mode...", 13, 10, 0
