@@ -1,27 +1,39 @@
 .PHONY: build clean
 
 build:
-	echo "Preparing everythng..."
+	@echo "Preparing everythng..."
 	rm -rf $(OS_ROOT)/build
 	rm -rf $(OS_ROOT)/dist
 	mkdir -p $(OS_ROOT)/build
 	mkdir -p $(OS_ROOT)/dist
 	
-	echo "Building kernel..."
+	@echo "Building kernel..."
 	$(GCC) -ffreestanding -m32 -g -c $(OS_ROOT)/src/kernel/kernel.cpp -o $(OS_ROOT)/build/kernel.o
 	nasm $(OS_ROOT)/src/kernel/kernel_entry.asm -f elf -o $(OS_ROOT)/build/kernel_entry.o
 	
-	echo "Linking kernel..."
+	@echo "Linking kernel..."
 	$(LD) -o $(OS_ROOT)/build/full_kernel.bin $(OS_ROOT)/build/kernel_entry.o $(OS_ROOT)/build/kernel.o -Ttext 0x9000 --oformat binary
-	echo "Kernel occupies "
-	wc --bytes $(OS_ROOT)/build/full_kernel.bin
-	echo " bytes. Modify boot.asm line 7 if necessary."
+	@echo "Total kernel size in bytes:"
+	@wc --bytes <$(OS_ROOT)/build/full_kernel.bin
 	
-	echo "Building bootloader..."
+	@echo "Building bootloader..."
 	nasm $(OS_ROOT)/src/bootloader/boot.asm -f bin -o $(OS_ROOT)/build/boot.bin
 	
-	echo "Building OS..."
+	@echo "Building OS..."
 	cat $(OS_ROOT)/build/boot.bin $(OS_ROOT)/build/full_kernel.bin > $(OS_ROOT)/dist/os.bin
+	
+	@echo "Total OS .bin size in bytes:"
+	@wc --bytes <$(OS_ROOT)/dist/os.bin
+	
+	@echo "Generating .img padded version for floppy disk emulation (1.44MB)..."
+	cp $(OS_ROOT)/dist/os.bin $(OS_ROOT)/dist/os.img
+	
+	@actual_size=$$(stat -c%s $(OS_ROOT)/dist/os.img); \
+	if [ $$actual_size -lt 1474560 ]; then \
+		echo "- Starting to pad (takes around 3 minutes)..."; \
+		dd if=/dev/zero bs=1 count=$$((1474560 - $$actual_size)) >> $(OS_ROOT)/dist/os.img; \
+	fi
 
+	@echo "Done!"
 clean:
 	rm -rf $(OS_ROOT)/build
