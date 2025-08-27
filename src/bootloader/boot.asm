@@ -76,76 +76,8 @@ exit:
 	hlt
 	jmp exit ; Hang when needed
 
-diskerr:
-	mov bx, disk_crash_first
-	call print_16
-
-	add al, '0' ; Convert the number of sectors read to ASCII (0-9)
-	mov [nsectors], al ; Store the number of sectors read in nsectors
-	mov bx, nsectors
-	call print_16
-
-	mov bx, disk_crash_second
-	call print_16
-
-	add ah, ' ' ; Make the error character a printable one (later substract by 0x20)
-	mov al, ah
-	xor ah, ah ; As ax is [ah:al], this is a way to null-terminate the string (ah contains the error code)
-
-	mov [errcode], ax ; Store the error code in errcode
-	mov bx, errcode
-	call print_16
-
-	mov bx, crlf
-	call print_16
-
-	jmp exit
-
-%include "./src/bootloader/bootprint.asm"
-
-GDT32_start:
-	dq 0x0000000000000000 ; Null segment
-	dq 0x00010000909A0C00 ; Code segment
-	dq 0x00010000A0920C00 ; Data segment
-GDT32_end:
-
-GDT32_descriptor:
-	dw GDT32_end - GDT32_start - 1
-	dd GDT32_start
-
-start_protected_mode_desc:
-	dd CODE_SEG_BASE_ADDR
-    dw 0x0008
-
-diskno:
-	db 0
-
-initmsg:
-	db "Bootloader started!", 13, 10, 0
-
-disk_crash_first:
-	db "Fatal (tried to load the kernel): Could only read ", 0
-
-disk_crash_second:
-	db " disk sectors. Error char: ", 0
-
-crlf:
-	db 13, 10, 0
-
-kernel_str:
-	db "kernel", 0
-
-nsectors:
-	db 0
-
-errcode:
-	dw 0
-
-before32msg:
-	db "Loads sucessful. Starting 32-bit mode...", 13, 10, 0
-
-init32msg:
-	db "Now in 32-bit mode. Starting kernel...", 13, 10, 0
+%include "./src/bootloader/utilities.asm"
+%include "./src/bootloader/data.asm"
 
 times 510-($-$$) db 0 ; Pad up to 510 bytes         
 dw 0xaa55 ; Last two bytes are the bootloader sign
